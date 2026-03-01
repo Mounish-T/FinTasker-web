@@ -210,8 +210,6 @@ cron.schedule("* * * * *", async () => {
         type: "expense",
         date: today,
       });
-
-      if (expenseCount === 0) {
         await transporter.sendMail({
           from: process.env.EMAIL_USER,
           to: user.email,
@@ -219,12 +217,11 @@ cron.schedule("* * * * *", async () => {
             "Smart Finance Reminder: Update Your Expenses",
           text: `Hi ${user.name},
 
-You haven't added any expenses for today yet. Please update them in the app to keep your tracking accurate.
+If you want add any expenses for today, Please update them in the app to keep your tracking accurate otherwise ignore this mail.
 
 Best regards,
-Smart Finance Team`,
+FinTasker Team`,
         });
-      }
     }
 
     /* ---- 2. Daily TruTime Reminders ---- */
@@ -244,7 +241,7 @@ Smart Finance Team`,
 This is a friendly reminder to update today's TruTime in the OneCognizant portal.
 
 Best regards,
-Smart Finance Team`,
+FinTasker Team`,
       });
     }
 
@@ -266,7 +263,7 @@ Smart Finance Team`,
 It's time to update your weekly worksheet in the OneCognizant portal.
 
 Best regards,
-Smart Finance Team`,
+FinTasker Team`,
       });
     }
   } catch (error) {
