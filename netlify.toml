@@ -6,7 +6,6 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
   external_node_modules = ["vite"]
-  node_format = "esm"
 
 [[redirects]]
   from = "/api/*"
