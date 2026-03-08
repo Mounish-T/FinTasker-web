@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LayoutDashboard, History, Settings, LogOut, Wallet, AlertCircle } from 'lucide-react';
@@ -8,6 +8,18 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowLogoutModal(false);
+      }
+    };
+    if (showLogoutModal) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showLogoutModal]);
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -21,7 +33,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const confirmLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -29,10 +41,19 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-white border-r border-slate-200 flex flex-col shrink-0">
         <div className="p-6 flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
-            <Wallet size={24} />
+          <div className="w-10 h-10 bg-emerald-600 rounded flex items-center justify-center text-white shadow-lg shadow-emerald-200 overflow-hidden">
+            <img 
+              src="/assets/logo.png" 
+              alt="FinTasker Logo" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                // target.parentElement!.innerHTML = '<div class="flex items-center justify-center w-full h-full text-white"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wallet"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></div>';
+              }}
+            />
           </div>
-          <span className="font-bold text-slate-800 text-lg">Smart Finance</span>
+          <span className="font-bold text-slate-800 text-lg">FinTasker</span>
         </div>
 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
@@ -59,7 +80,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="p-4 border-t border-slate-100">
           <div className="px-4 py-3 mb-2">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">User</p>
-            <p className="text-sm font-medium text-slate-700 truncate">{user?.name}</p>
+            <p className="text-sm font-bold text-slate-800 truncate">{user?.name}</p>
+            <p className="text-xs text-slate-500 truncate">@{user?.username}</p>
+            <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>
           </div>
           <button
             onClick={handleLogoutClick}

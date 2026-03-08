@@ -3,8 +3,11 @@ import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  resetPasswordCode: { type: String },
+  resetPasswordExpires: { type: Date },
   dailySpendingLimit: { type: Number, default: 1000 },
   monthlySavingsTarget: { type: Number, default: 5000 },
   minimumBalance: { type: Number, default: 500 },

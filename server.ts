@@ -8,10 +8,23 @@ import bcrypt from 'bcryptjs';
 import cron from 'node-cron';
 import nodemailer from 'nodemailer';
 import { format } from 'date-fns';
-import { User } from './src/server/models/User.js';
-import { Transaction } from './src/server/models/Transaction.js';
+import { User } from './src/server/models/User';
+import { Transaction } from './src/server/models/Transaction';
+
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
@@ -43,11 +56,17 @@ const authenticateToken = (req: any, res: any, next: any) => {
 // Auth Routes
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: 'User already exists' });
+    const { name, username, email, password } = req.body;
+    const normalizedEmail = email.toLowerCase();
+    const normalizedUsername = username.toLowerCase();
+    
+    const existingEmail = await User.findOne({ email: normalizedEmail });
+    if (existingEmail) return res.status(400).json({ message: 'Email already exists' });
 
-    const user = new User({ name, email, password });
+    const existingUsername = await User.findOne({ username: normalizedUsername });
+    if (existingUsername) return res.status(400).json({ message: 'Username already exists' });
+
+    const user = new User({ name, username: normalizedUsername, email: normalizedEmail, password });
     await user.save();
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
@@ -57,14 +76,64 @@ app.post('/api/auth/register', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const { loginId, password } = req.body; // loginId can be email or username
+    const normalizedLoginId = loginId.toLowerCase();
+    const user = await User.findOne({ $or: [{ email: normalizedLoginId }, { username: normalizedLoginId }] });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    const token = jwt.sign({ id: user._id, email: user.email, username: user.username }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, username: user.username } });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const normalizedEmail = email.toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordCode = resetCode;
+    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
+    await user.save();
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'FinTasker Password Reset Code',
+      text: `Your password reset code is: ${resetCode}. It will expire in 1 hour.`,
+    });
+
+    res.json({ message: 'Reset code sent to email' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+    const normalizedEmail = email.toLowerCase();
+    const user = await User.findOne({ 
+      email: normalizedEmail, 
+      resetPasswordCode: code, 
+      resetPasswordExpires: { $gt: Date.now() } 
+    });
+
+    if (!user) return res.status(400).json({ message: 'Invalid or expired reset code' });
+
+    user.password = newPassword;
+    user.resetPasswordCode = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Password reset successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -92,7 +161,7 @@ app.put('/api/user/settings', authenticateToken, async (req: any, res) => {
 // Transactions
 app.get('/api/transactions', authenticateToken, async (req: any, res) => {
   try {
-    const transactions = await Transaction.find({ userId: req.user.id }).sort({ date: -1, time: -1 });
+    const transactions = await Transaction.find({ userId: req.user.id }).sort({ date: -1, time: -1, createdAt: -1 });
     res.json(transactions);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -120,14 +189,6 @@ app.delete('/api/transactions/:id', authenticateToken, async (req: any, res) => 
 
 // --- Reminder System (Cron Jobs) ---
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
 // Reminder Cron (Runs every minute to check for users with matching reminder times)
 cron.schedule('* * * * *', async () => {
   const now = new Date();
@@ -151,8 +212,8 @@ cron.schedule('* * * * *', async () => {
         await transporter.sendMail({
           from: process.env.EMAIL_USER,
           to: user.email,
-          subject: 'Smart Finance Reminder: Update Your Expenses',
-          text: `Hi ${user.name},\n\nYou haven't added any expenses for today yet. Please update them in the app to keep your tracking accurate.\n\nBest regards,\nSmart Finance Team`,
+          subject: 'FinTasker Reminder: Update Your Expenses',
+          text: `Hi ${user.name},\n\nYou haven't added any expenses for today yet. Please update them in the app to keep your tracking accurate.\n\nBest regards,\nFinTasker Team`,
         });
       }
     }
@@ -167,7 +228,7 @@ cron.schedule('* * * * *', async () => {
         from: process.env.EMAIL_USER,
         to: user.email,
         subject: 'Work Reminder: TruTime Update',
-        text: `Hi ${user.name},\n\nThis is a friendly reminder to update today's TruTime in the OneCognizant portal.\n\nBest regards,\nSmart Finance Team`,
+        text: `Hi ${user.name},\n\nThis is a friendly reminder to update today's TruTime in the OneCognizant portal.\n\nBest regards,\nFinTasker Team`,
       });
     }
 
@@ -182,7 +243,7 @@ cron.schedule('* * * * *', async () => {
         from: process.env.EMAIL_USER,
         to: user.email,
         subject: 'Work Reminder: Weekly Worksheet',
-        text: `Hi ${user.name},\n\nIt's time to update your weekly worksheet in the OneCognizant portal.\n\nBest regards,\nSmart Finance Team`,
+        text: `Hi ${user.name},\n\nIt's time to update your weekly worksheet in the OneCognizant portal.\n\nBest regards,\nFinTasker Team`,
       });
     }
   } catch (error) {

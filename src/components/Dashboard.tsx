@@ -43,6 +43,18 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowAddModal(false);
+      }
+    };
+    if (showAddModal) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAddModal]);
+
   const fetchData = async () => {
     try {
       const [transRes, settingsRes] = await Promise.all([
@@ -294,7 +306,14 @@ const Dashboard: React.FC = () => {
       <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
         <h2 className="text-xl font-bold text-slate-900 mb-6">Recent Activity</h2>
           <div className="space-y-4">
-            {transactions.slice(0, 5).map((t) => (
+            {[...transactions]
+              .sort((a, b) => {
+                const dateCompare = b.date.localeCompare(a.date);
+                if (dateCompare !== 0) return dateCompare;
+                return b.time.localeCompare(a.time);
+              })
+              .slice(0, 5)
+              .map((t) => (
               <div key={t._id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 transition-all cursor-pointer">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${

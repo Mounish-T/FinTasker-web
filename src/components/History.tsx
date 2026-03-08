@@ -19,6 +19,19 @@ const History: React.FC = () => {
     fetchTransactions();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowDeleteModal(false);
+        setTransactionToDelete(null);
+      }
+    };
+    if (showDeleteModal) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showDeleteModal]);
+
   const fetchTransactions = async () => {
     try {
       const res = await api.get('/transactions');
@@ -54,6 +67,10 @@ const History: React.FC = () => {
     const matchesSearch = t.description.toLowerCase().includes(filter.search.toLowerCase()) || 
                           t.category.toLowerCase().includes(filter.search.toLowerCase());
     return matchesType && matchesCategory && matchesMonth && matchesSearch;
+  }).sort((a, b) => {
+    const dateCompare = b.date.localeCompare(a.date);
+    if (dateCompare !== 0) return dateCompare;
+    return b.time.localeCompare(a.time);
   });
 
   const categories = Array.from(new Set(transactions.map(t => t.category)));
