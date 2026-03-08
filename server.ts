@@ -21,8 +21,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = typeof import.meta.url !== 'undefined' ? fileURLToPath(import.meta.url) : '';
+const __dirname = __filename ? path.dirname(__filename) : process.cwd();
 
 const app = express();
 const PORT = 3000;
@@ -32,7 +32,7 @@ app.use(express.json());
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!MONGODB_URI && (process.env.NETLIFY || process.env.NODE_ENV === 'production')) {
+if (!MONGODB_URI && (process.env.NETLIFY || process.env.VERCEL || process.env.NODE_ENV === 'production')) {
   console.error('CRITICAL: MONGODB_URI is not set in production environment!');
 }
 
@@ -87,6 +87,7 @@ app.get('/api/health', async (req, res) => {
     database: dbStatus,
     env: process.env.NODE_ENV,
     netlify: !!process.env.NETLIFY,
+    vercel: !!process.env.VERCEL,
     hasUri: !!process.env.MONGODB_URI
   });
 });
@@ -294,27 +295,27 @@ cron.schedule('* * * * *', async () => {
 export { app };
 
 async function startServer() {
-  if (process.env.NODE_ENV !== 'production' && !process.env.NETLIFY) {
+  if (process.env.NODE_ENV !== 'production' && !process.env.NETLIFY && !process.env.VERCEL) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else if (!process.env.NETLIFY) {
+  } else if (!process.env.NETLIFY && !process.env.VERCEL) {
     app.use(express.static(path.join(__dirname, 'dist')));
     app.get('*', (req, res) => {
       res.sendFile(path.join(__dirname, 'dist', 'index.html'));
     });
   }
 
-  if (!process.env.NETLIFY) {
+  if (!process.env.NETLIFY && !process.env.VERCEL) {
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
   }
 }
 
-if (!process.env.NETLIFY) {
+if (!process.env.NETLIFY && !process.env.VERCEL) {
   startServer();
 }
