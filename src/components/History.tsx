@@ -6,6 +6,8 @@ import { format } from 'date-fns';
 const History: React.FC = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [filter, setFilter] = useState({
     type: 'all',
     category: 'all',
@@ -28,11 +30,18 @@ const History: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this transaction?')) return;
+  const handleDelete = (id: string) => {
+    setTransactionToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!transactionToDelete) return;
     try {
-      await api.delete(`/transactions/${id}`);
-      setTransactions(transactions.filter(t => t._id !== id));
+      await api.delete(`/transactions/${transactionToDelete}`);
+      setTransactions(transactions.filter(t => t._id !== transactionToDelete));
+      setShowDeleteModal(false);
+      setTransactionToDelete(null);
     } catch (error) {
       alert('Error deleting transaction');
     }
@@ -72,7 +81,7 @@ const History: React.FC = () => {
           <select
             value={filter.month}
             onChange={(e) => setFilter({ ...filter, month: e.target.value })}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+            className="px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 bg-white cursor-pointer"
           >
             <option value="all">All Months</option>
             {months.map(m => (
@@ -84,7 +93,7 @@ const History: React.FC = () => {
           <select
             value={filter.type}
             onChange={(e) => setFilter({ ...filter, type: e.target.value })}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+            className="px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 bg-white cursor-pointer"
           >
             <option value="all">All Types</option>
             <option value="income">Income</option>
@@ -93,7 +102,7 @@ const History: React.FC = () => {
           <select
             value={filter.category}
             onChange={(e) => setFilter({ ...filter, category: e.target.value })}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+            className="px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 bg-white cursor-pointer"
           >
             <option value="all">All Categories</option>
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -140,7 +149,7 @@ const History: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <button 
                         onClick={() => handleDelete(t._id)}
-                        className="p-2 text-slate-400 hover:text-red-600 transition-all"
+                        className="p-2 text-slate-400 hover:text-red-600 transition-all cursor-pointer"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -158,6 +167,38 @@ const History: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <Trash2 size={24} />
+              <h2 className="text-2xl font-bold">Confirm Delete</h2>
+            </div>
+            <p className="text-slate-600 mb-8">
+              Are you sure you want to delete this transaction? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setTransactionToDelete(null);
+                }}
+                className="flex-1 px-4 py-3 rounded-xl border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 shadow-lg shadow-red-100 transition-all cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

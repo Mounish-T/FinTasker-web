@@ -133,7 +133,7 @@ const Settings: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setSettings({ ...settings, enableTruTimeReminder: !settings.enableTruTimeReminder })}
-                    className={`w-12 h-6 rounded-full transition-all relative ${settings.enableTruTimeReminder ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                    className={`w-12 h-6 rounded-full transition-all relative cursor-pointer ${settings.enableTruTimeReminder ? 'bg-emerald-500' : 'bg-slate-300'}`}
                   >
                     <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.enableTruTimeReminder ? 'left-7' : 'left-1'}`} />
                   </button>
@@ -163,7 +163,7 @@ const Settings: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setSettings({ ...settings, enableWeeklyWorksheetReminder: !settings.enableWeeklyWorksheetReminder })}
-                  className={`w-12 h-6 rounded-full transition-all relative ${settings.enableWeeklyWorksheetReminder ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                  className={`w-12 h-6 rounded-full transition-all relative cursor-pointer ${settings.enableWeeklyWorksheetReminder ? 'bg-emerald-500' : 'bg-slate-300'}`}
                 >
                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.enableWeeklyWorksheetReminder ? 'left-7' : 'left-1'}`} />
                 </button>
@@ -175,7 +175,7 @@ const Settings: React.FC = () => {
                     <select
                       value={settings.weeklyReminderDay}
                       onChange={(e) => setSettings({ ...settings, weeklyReminderDay: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none bg-white cursor-pointer"
                     >
                       <option>Monday</option>
                       <option>Tuesday</option>
@@ -205,7 +205,7 @@ const Settings: React.FC = () => {
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center gap-2 bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50"
+            className="flex items-center gap-2 bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 cursor-pointer"
           >
             <Save size={20} />
             {saving ? 'Saving...' : 'Save All Changes'}

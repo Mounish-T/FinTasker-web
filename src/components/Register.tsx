@@ -89,7 +89,7 @@ const Register: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
+              className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-2 group disabled:opacity-50 cursor-pointer"
             >
               {loading ? 'Creating account...' : 'Create Account'}
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -99,7 +99,7 @@ const Register: React.FC = () => {
           <div className="mt-8 text-center">
             <p className="text-slate-500 text-sm">
               Already have an account?{' '}
-              <Link to="/login" className="text-emerald-600 font-bold hover:underline">
+              <Link to="/login" className="text-emerald-600 font-bold hover:underline cursor-pointer">
                 Sign in
               </Link>
             </p>

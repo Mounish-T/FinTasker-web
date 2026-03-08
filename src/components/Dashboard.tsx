@@ -162,7 +162,7 @@ const Dashboard: React.FC = () => {
               setFormData(prev => ({ ...prev, category: 'Income' }));
               setShowAddModal(true); 
             }}
-            className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+            className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 cursor-pointer"
           >
             <Plus size={20} /> Add Income
           </button>
@@ -172,7 +172,7 @@ const Dashboard: React.FC = () => {
               setFormData(prev => ({ ...prev, category: 'FN Breakfast' }));
               setShowAddModal(true); 
             }}
-            className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
+            className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 cursor-pointer"
           >
             <Plus size={20} /> Add Expense
           </button>
@@ -295,7 +295,7 @@ const Dashboard: React.FC = () => {
         <h2 className="text-xl font-bold text-slate-900 mb-6">Recent Activity</h2>
           <div className="space-y-4">
             {transactions.slice(0, 5).map((t) => (
-              <div key={t._id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 transition-all">
+              <div key={t._id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 transition-all cursor-pointer">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                     t.type === 'income' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
@@ -328,7 +328,7 @@ const Dashboard: React.FC = () => {
                   required
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer"
                   placeholder="0.00"
                 />
               </div>
@@ -338,7 +338,7 @@ const Dashboard: React.FC = () => {
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer"
                   >
                     <option>FN Breakfast</option>
                     <option>AN Lunch</option>
@@ -375,13 +375,13 @@ const Dashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 px-4 py-3 rounded-xl border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50"
+                  className="flex-1 px-4 py-3 rounded-xl border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 shadow-lg shadow-emerald-100"
+                  className="flex-1 px-4 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 shadow-lg shadow-emerald-100 cursor-pointer"
                 >
                   Save
                 </button>
