@@ -8,8 +8,8 @@ import bcrypt from 'bcryptjs';
 import cron from 'node-cron';
 import nodemailer from 'nodemailer';
 import { format } from 'date-fns';
-import { User } from './src/server/models/User';
-import { Transaction } from './src/server/models/Transaction';
+import { User } from './src/server/models/User.js';
+import { Transaction } from './src/server/models/Transaction.js';
 
 dotenv.config();
 
