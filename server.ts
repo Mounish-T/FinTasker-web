@@ -2,7 +2,6 @@ import express from 'express';
 import path from 'path';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import cron from 'node-cron';
@@ -10,7 +9,6 @@ import nodemailer from 'nodemailer';
 import { format } from 'date-fns';
 import { User } from './src/server/models/User';
 import { Transaction } from './src/server/models/Transaction';
-
 import { fileURLToPath } from 'url';
 
 dotenv.config();
@@ -257,6 +255,7 @@ export { app };
 
 async function startServer() {
   if (process.env.NODE_ENV !== 'production' && !process.env.NETLIFY) {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
