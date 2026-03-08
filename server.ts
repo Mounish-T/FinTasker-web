@@ -30,10 +30,27 @@ const PORT = 3000;
 app.use(express.json());
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/smart-finance';
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI && (process.env.NETLIFY || process.env.NODE_ENV === 'production')) {
+  console.error('CRITICAL: MONGODB_URI is not set in production environment!');
+}
+
+const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) return;
+  
+  try {
+    const maskedUri = MONGODB_URI ? MONGODB_URI.replace(/\/\/.*@/, '//***:***@') : 'undefined';
+    console.log(`Connecting to MongoDB: ${maskedUri}`);
+    await mongoose.connect(MONGODB_URI || 'mongodb://localhost:27017/smart-finance');
+    console.log('Connected to MongoDB');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+  }
+};
+
+// Connect immediately but also ensure it's connected in routes
+connectDB();
 
 // Auth Middleware
 const authenticateToken = (req: any, res: any, next: any) => {
@@ -49,7 +66,30 @@ const authenticateToken = (req: any, res: any, next: any) => {
   });
 };
 
+// Database Connection Middleware
+const ensureDbConnected = async (req: any, res: any, next: any) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(500).json({ message: 'Database connection failed' });
+  }
+};
+
+app.use('/api', ensureDbConnected);
+
 // --- API Routes ---
+
+app.get('/api/health', async (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'connecting/disconnected';
+  res.json({ 
+    status: 'ok', 
+    database: dbStatus,
+    env: process.env.NODE_ENV,
+    netlify: !!process.env.NETLIFY,
+    hasUri: !!process.env.MONGODB_URI
+  });
+});
 
 // Auth Routes
 app.post('/api/auth/register', async (req, res) => {
